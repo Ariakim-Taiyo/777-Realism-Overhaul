@@ -248,7 +248,7 @@ geofs.animation.values.gearTilt = null;
 
 function tiltGear(){
   if (geofs.animation.values.haglFeet <= 18){
-    geofs.animation.values.gearTilt = clamp((restingPoint * geofs.animation.values.haglFeet)/20, 18, 20)
+    geofs.animation.values.gearTilt = clamp((restingPoint * geofs.animation.values.haglFeet)/15, 18.5, 20)
   }
 }
 
