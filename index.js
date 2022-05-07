@@ -1,3 +1,78 @@
+//complicated maths to resolve torque axes
+  //𝐹𝑠=|𝐹⃗ |cos(𝜃𝑠,𝐹)
+function splitAxes(force) {
+  var angle = geofs.animation.values.heading360 * (Math.PI/180)
+  if (geofs.animation.values.atilt <= 0) {
+  var anglez = geofs.animation.values.atilt - 45
+  }
+  else {
+    var anglez = Math.abs(Math.abs(geofs.animation.values.atilt + 45) - 360)
+  }
+  
+  fx = force * (Math.sin(angle))
+  fy = force * (Math.cos(angle))
+  fz = force * Math.cos(anglez)
+  return [fx, fy, fz];
+}
+
+//stall buffeting
+function stallForces() {
+  if (geofs.animation.values.aoa > 7) {
+    geofs.aircraft.instance.rigidBody.applyTorqueImpulse([splitAxes(Math.random()*geofs.animation.values.aoa * 1000)[0],splitAxes(Math.random()*geofs.animation.values.aoa * 1000)[1],0])
+  }
+}
+
+//ground effect
+function groundEffect() {
+  if (geofs.animation.values.haglFeet <= 100) {
+    geofs.aircraft.instance.rigidBody.applyCentralImpulse([0,0,(-(geofs.animation.values.haglFeet) + 100) * geofs.animation.values.kias])
+  }
+}
+
+//tiller restriction
+geofs.animation.values.tiller = null;
+function tiller() {
+  if (geofs.animation.values.kias >= 50) {
+    geofs.animation.values.tiller = geofs.animation.values.yaw / (geofs.animation.values.kias / 5)
+  }
+  else {
+    geofs.animation.values.tiller = geofs.animation.values.yaw
+  }
+}
+
+//spoilers/flaps shake
+geofs.animation.values.spoilersShake = null;
+geofs.animation.values.flapsShake = null;
+function getShake() {
+  if (geofs.animation.values.airbrakesPosition == 1) {
+    geofs.animation.values.spoilersShake = 1 - (Math.random() / 20) * (geofs.animation.values.kias / 200)
+  }
+  else {
+    geofs.animation.values.spoilersShake = geofs.animation.values.airbrakesPosition
+  }
+  if (geofs.animation.values.flapsPosition == 6) {
+    geofs.animation.values.flapsShake = (Math.random() / 20) * (geofs.animation.values.kias / 100);
+  }
+  else {
+    geofs.animation.values.flapsShake = 0;
+  }
+}
+geofs.aircraft.instance.setup.parts[106].animations[1].value = "tiller"
+geofs.aircraft.instance.setup.parts[60].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[61].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[62].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[63].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[64].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[65].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[66].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[67].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[68].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[69].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[70].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[71].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[72].animations[0].value = "spoilersShake"
+geofs.aircraft.instance.setup.parts[73].animations[0].value = "spoilersShake"
+
 //wingflex re-assignment
 function resetLift2(){
 geofs.animation.values.liftLeftWing = (-geofs.aircraft.instance.parts.wingleft.lift / 200000)+(geofs.animation.values.accZ)/20;
@@ -141,6 +216,13 @@ function pushInputs(){
 }
 
 function computeOutputs(){
+  if (geofs.aircraft.instance.setup.autopilot) {
+    geofs.animation.values.outerAveragePitch = geofs.animation.values.pitch
+geofs.animation.values.outerAverageRoll = geofs.animation.values.roll
+geofs.animation.values.outerAverageYaw = geofs.animation.values.yaw
+    return;
+  }
+  else {
 var pitchcheck = movingAvg(pitchInputs, 6, 6);
 var rollcheck = movingAvg(rollInputs, 6, 6);
  var yawcheck = movingAvg(yawInputs, 6, 6);
@@ -150,6 +232,7 @@ geofs.animation.values.averageYaw = yawcheck[yawcheck.length - 3];
   geofs.animation.values.outerAveragePitch = clamp(geofs.animation.values.averagePitch / (geofs.animation.values.kias / 200), -1, 1);
 geofs.animation.values.outerAverageRoll = clamp(geofs.animation.values.averageRoll / (geofs.animation.values.kias / 100), -1, 1);
 geofs.animation.values.outerAverageYaw = clamp(geofs.animation.values.averageYaw / (geofs.animation.values.kias / 100), -1, 1);
+  }
 }
 
 function movingAvg(array, countBefore, countAfter) {
@@ -283,6 +366,8 @@ geofs.animation.values.isTerrainWarn = 0;
 
 function getGearFlapsWarn() {
 if (geofs.animation.values.groundContact == 1) {
+  geofs.animation.values.isGearWarn = 0;
+  geofs.animation.values.isFlapsWarn = 0;
   return;
 }
 	if (geofs.animation.values.haglFeet <= 500 && geofs.animation.values.gearPosition == 1 && geofs.animation.values.climbrate < 0 && geofs.animation.values.isPullupWarn == 0) {
@@ -313,6 +398,7 @@ function testTerrainorAppr() {
 		}
 	} else {
 		geofs.animation.values.isTerrainWarn = 0;
+    geofs.animation.values.isPullupWarn = 0;
 		return;
 	}
 }
@@ -400,6 +486,8 @@ function doRadioAltCall(){
 
   
 setInterval(function(){
+  groundEffect()
+  getShake()
   computeYaw()
   tiltGear();
   computePitch();
@@ -411,4 +499,6 @@ setInterval(function(){
   testTerrainorAppr()
   testForApproach()
   doRadioAltCall()
+  tiller()
+  stallForces()
 }, 20)
