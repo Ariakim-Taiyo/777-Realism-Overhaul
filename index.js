@@ -482,6 +482,19 @@ function doRadioAltCall(){
     geofs.animation.values.gpws10 = 0;
   } 
 }
+  else {
+    geofs.animation.values.gpws1000 = 0;
+    geofs.animation.values.gpws500 = 0;
+    geofs.animation.values.gpws400 = 0;
+    geofs.animation.values.gpws300 = 0;
+    geofs.animation.values.gpws200 = 0;
+    geofs.animation.values.gpws100 = 0;
+    geofs.animation.values.gpws50 = 0;
+    geofs.animation.values.gpws40 = 0;
+    geofs.animation.values.gpws30 = 0;
+    geofs.animation.values.gpws20 = 0;
+    geofs.animation.values.gpws10 = 0;
+  }
 }
 
   
